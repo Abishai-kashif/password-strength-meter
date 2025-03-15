@@ -17,8 +17,8 @@ def handleGenerate():
     st.session_state.generated_password = password.generate_strong_password();
 
 
-def handleCopy(password):
-    pyperclip.copy(password)
+def handleCopy(text):
+    pyperclip.copy(text)
     st.toast("Password copied to clipboard ✅")
 
 
