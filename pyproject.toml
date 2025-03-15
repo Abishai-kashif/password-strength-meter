@@ -6,5 +6,6 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "pyperclip>=1.9.0",
+    "requests>=2.32.3",
     "streamlit>=1.43.2",
 ]

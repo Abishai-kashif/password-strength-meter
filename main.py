@@ -1,7 +1,6 @@
 import password
 import streamlit as st
-import pyperclip
-
+import requests
 
 if "generate" not in st.session_state:
     st.session_state.generate = False
@@ -9,10 +8,42 @@ if "generate" not in st.session_state:
 if "generated_password" not in st.session_state:
     st.session_state.generated_password = ""
 
+if "error" not in st.session_state:
+    st.session_state.error = ""
+
+if "loading" not in st.session_state:
+    st.session_state.loading = False
+
 def handleGenerate():
     st.session_state.generate = True
+    st.session_state.loading = True
 
-    st.session_state.generated_password = password.generate_strong_password()
+    while True:    
+        strong_password = password.generate_strong_password()
+
+        try:
+            response = requests.post("https://password-strength-meter-api.vercel.app/check-password-existence", json={
+                            "password": strong_password
+                        })
+
+            if response.status_code != 200:
+                raise Exception("Password strength meter API returned a non-200 status code")
+
+            does_exists: bool = response.json()['doesExists']
+
+            if not does_exists:
+                st.session_state.generated_password = strong_password
+
+                requests.post("https://password-strength-meter-api.vercel.app/insert-password", json={
+                            "password": strong_password
+                        })
+
+                break
+        except Exception as e:
+            st.session_state.error = str(e)
+            break
+        finally:
+            st.session_state.loading = False
 
 
 
@@ -57,6 +88,10 @@ st.button("Generate" if not st.session_state.generate else "Regenerate", on_clic
 
 
 if st.session_state.generate:
+    if st.session_state.loading:
+        st.warning("Loading....")
+    elif st.session_state.error:
+        st.error(st.session_state.error)
+    else:
+        st.success( st.session_state.generated_password)
 
-    gen_pass = st.session_state.generated_password
-    st.success(gen_pass)
